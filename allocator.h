@@ -1,66 +1,101 @@
 #pragma once
 
-template <typename Type>
-struct slice {
-    Type* data;
-    int   count;
+#include "memory.h"
 
-    // operator Type*() { return data; }
-    const Type& operator[](int i) const { return data[i]; }
-    Type&       operator[](int i) { return data[i]; }
+// namespace giacomo {
+struct stack_allocator {
+    unsigned char* data     = nullptr;
+    int            capacity = 0;
+    int            offset   = 0;
+
+    ~stack_allocator() {
+        // call destroy_stack_allocator()!
+        assert(data == nullptr);
+    }
 };
 
-struct allocator {
-    allocator*     arena  = nullptr;
-    unsigned char* data   = nullptr;
-    int            size   = 0;
-    int            offset = 0;
+inline void init_stack_allocator(stack_allocator*& stack, int size) {
+    if (stack == nullptr)
+        stack = new stack_allocator();
+    else
+        assert(0);
+    stack->data     = new unsigned char[size];
+    stack->capacity = size;
+    stack->offset   = 0;
+    // printf("init stack allocator of size %d\n", (int)size);
+}
 
-    allocator stack_frame() {
-        // printf("creating stack frame of size %d\n", (int)0);
-        allocator frame;
-        frame.arena  = this;
-        frame.data   = data + offset;
-        frame.size   = 0;
-        frame.offset = 0;
-        return frame;
+inline void destroy_stack_allocator(stack_allocator* stack) {
+    delete[] stack->data;
+    stack->data     = nullptr;
+    stack->capacity = 0;
+    stack->offset   = 0;
+}
+
+struct stack_frame {
+    stack_allocator* stack;
+    unsigned char*   data   = nullptr;
+    int              offset = 0;
+
+    stack_frame(stack_allocator* stack) {
+        this->stack = stack;
+        data        = stack->data + stack->offset;
+        offset      = 0;
     }
 
     template <typename Type>
-    slice<Type> allocate(int s, bool set_to_zero = true) {
-        auto result = slice<Type>{(Type*)(data + offset), s};
+    Type& allocate() {
+        auto ptr   = (Type*)(data + offset);
+        auto bytes = sizeof(Type);
+        assert(stack->offset + bytes < stack->capacity);
+        if (stack->offset + bytes >= stack->capacity) return *ptr;
 
-        auto bytes = sizeof(Type) * s;
-        if (set_to_zero) memset(result.data, 0, bytes);
+        this->offset += bytes;
+        stack->offset += bytes;
+        return *ptr;
+    }
 
-        offset += bytes;
-        if (arena != nullptr) arena->offset += bytes;
+    template <typename Type>
+    slice<Type> allocate_array(int count, bool empty) {
+        auto bytes  = sizeof(Type) * count;
+        auto result = slice<Type>{nullptr, 0};
 
+        assert(stack->offset + bytes < stack->capacity);
+        if (stack->offset + bytes >= stack->capacity) return result;
+        result.data = (Type*)(data + offset);
+        if (not empty) result.count = count;
+
+        this->offset += bytes;
+        stack->offset += bytes;
         return result;
     }
 
-    void free() { offset = 0; }
+    template <typename Type>
+    slice<Type> allocate_array(int count, const Type& def) {
+        auto result = allocate_array<Type>(count, false);
+        if (result.data != nullptr)
+            for (int i = 0; i < count; ++i) result[i] = def;
+        return result;
+    }
 
-    ~allocator() {
-        if (arena == nullptr) {
-            // printf("destroying arena of size %d\n", (int)size);
-            if (data != nullptr) delete[] data;
-        } else {
-            // printf("destroying stack frame of size %d\n", (int)size);
-            arena->offset -= offset;
-        }
+    ~stack_frame() {
+        stack->offset -= offset;
         data   = nullptr;
-        size   = 0;
         offset = 0;
     }
 };
 
-inline void init_allocator(allocator& alloc, int s) {
-    alloc.arena  = nullptr;
-    alloc.data   = new unsigned char[s];
-    alloc.size   = s;
-    alloc.offset = 0;
-    // printf("creating arena of size %d\n", (int)size);
-}
+stack_allocator* global_stack_allocator = nullptr;
 
-inline void destroy_allocator(allocator& alloc) { alloc.~allocator(); }
+#define INIT_STACK_ALLOCATOR(N) init_stack_allocator(global_stack_allocator, N);
+#define DESTROY_STACK_ALLOCATOR() \
+    destroy_stack_allocator(global_stack_allocator);
+
+#define STACK_ALLOCATION auto _frame = stack_frame(global_stack_allocator);
+
+#define array(T, S) _frame.allocate_array<T>(S, false)
+#define array_reserve(T, S, Val) _frame.allocate_array<T>(S, true)
+#define array_fill(T, S, Val) _frame.allocate_array<T>(S, Val)
+#define make(T) _frame.allocate<T>()
+
+// }  // namespace giacomo
