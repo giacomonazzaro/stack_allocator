@@ -59,14 +59,7 @@ struct array {
         int   i;
 
         void   operator==(const Type& rhs) { data = rhs; }
-        inline operator Type&() const { return data; }
-    };
-
-    struct my_const_pair {
-        const Type& data;
-        int         i;
-
-        inline operator const Type&() const { return data; }
+        inline operator Type&() { return data; }
     };
 
     struct const_iterator {
@@ -80,7 +73,7 @@ struct array {
         bool operator!=(const const_iterator& other) const {
             return i != other.i;
         }
-        my_const_pair operator*() const { return {*(data + i), i}; }
+        const Type& operator*() const { return *(data + i); }
     };
     inline const_iterator begin() const { return const_iterator{data, 0}; }
     inline const_iterator end() const { return const_iterator{data, count}; }
@@ -94,7 +87,7 @@ struct array {
             return *this;
         }
         bool operator!=(nonconst_iterator& other) const { return i != other.i; }
-        my_pair operator*() const { return {*(data + i), i}; }
+        Type& operator*() const { return *(data + i); }
     };
     inline nonconst_iterator begin() { return nonconst_iterator{data, 0}; }
     inline nonconst_iterator end() { return nonconst_iterator{data, count}; }
@@ -131,14 +124,3 @@ inline void print(const char* name, Container&& a, int line_size = 32,
         }
     }
 }
-
-// #ifdef SLICE_FROM_VECTOR
-// template <typename Type>
-// array make_array(const vector<Type>& vec) {
-//     return array<const Type>(vec.data(), vec.size());
-// }
-
-// array make_array(vector<Type>& vec) {
-//     return array<Type>(vec.data(), vec.size());
-// }
-// #endif

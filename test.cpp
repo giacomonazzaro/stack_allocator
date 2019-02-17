@@ -6,7 +6,7 @@
 // #include <vector>
 
 void test_stack_array() {
-    STACK_ALLOCATION
+    STACK_FRAME
     // array<int, 10> a = {0, 1, 2, 3};
     auto a = array(int, 100);
     a      = {0, 1, 2, 3};
@@ -33,7 +33,7 @@ void test_stack_array() {
 }
 
 void test_heap_array() {
-    STACK_ALLOCATION
+    STACK_FRAME
     // Array<int> a = {7, 9, 3, 8, 0, 2, 4, 8, 3, 9};
     auto a = array(int, 10);
     a      = {7, 9, 3, 8, 0, 2, 4, 8, 3, 9};
@@ -55,7 +55,7 @@ void test_heap_array() {
 }
 
 void test_interaction() {
-    STACK_ALLOCATION
+    STACK_FRAME
     auto heap = array(int, 10);
     heap      = {0, -1, -2, -3, -4, -5, -6, -7, -8, -9};
 
@@ -76,7 +76,7 @@ void test_interaction() {
 }
 
 void test_sorting() {
-    STACK_ALLOCATION
+    STACK_FRAME
     // Timer time;
     auto quick = array(int, 10);
     // printf("allocating %d int in %lf seconds\n", count(x), time.secs());

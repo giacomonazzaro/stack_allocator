@@ -4,40 +4,48 @@
 #include <string>
 
 void procedure2() {
-    STACK_ALLOCATION
+    STACK_FRAME
+
     auto floats = array(int, 32);
-    for (auto [val, index] : floats) val = 2;
+    // for (auto& [val, index] : floats) val = 2;
+    for (int i = 0; i < floats.count; i++) floats[i] = 2;
 
     print(__FUNCTION__, floats);
 }
 
 array<int> get_array(int size) {
-    STACK_ALLOCATION_INLINE
-    auto result = array_fill(int, size, 99);
+    STACK_FRAME_RETURN(array_fill(int, size, 99));
+
     return result;
 }
 
 void procedure1() {
-    STACK_ALLOCATION
+    STACK_FRAME
     auto floats = array_fill(float, 15, 1.1);
 
     procedure2();
 
     printf("%s :", __FUNCTION__);
-    for (auto f : floats) printf("%f ", f);
+    // for (auto f : floats) printf("%f ", f);
+    for (int i = 0; i < floats.count; i++) printf("%f ", floats[i]);
+
     printf("\n\n");
     // print(__FUNCTION__, floats);
 }
 
+void set_half(array<int>& arr) {
+    for (auto& i : arr(0, 10)) i = -1;
+}
+
 void procedure() {
-    STACK_ALLOCATION
+    STACK_FRAME
 
     auto ints = array_fill(int, 50, 7);
     auto arr  = get_array(10);
 
-    for (auto& i : ints(2, 4)) {
-        i = -10;
-    }
+    set_half(ints);
+    // for(int i=0; i<ints(2,4).count; i++)
+    //    ints[i] = -10;
 
     procedure1();
 
