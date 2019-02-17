@@ -1,60 +1,27 @@
 #include "../stack_allocator.h"
 
-void procedure2() {
-    STACK_FRAME
+array<int> make_incremental_array(int size) {
+    STACK_FRAME_RETURN(array(int, size));
 
-    auto floats = array(int, 32);
-    // for (auto& [val, index] : floats) val = 2;
-    for (int i = 0; i < floats.count; i++) floats[i] = 2;
-
-    print(__FUNCTION__, floats);
-}
-
-array<int> get_array(int size) {
-    STACK_FRAME_RETURN(array_fill(int, size, 99));
-
+    for (int i = 0; i < result.count; ++i) result[i] = i;
     return result;
 }
 
-void procedure1() {
-    STACK_FRAME
-    auto floats = array_fill(float, 15, 1.1);
-
-    procedure2();
-
-    printf("%s :", __FUNCTION__);
-    // for (auto f : floats) printf("%f ", f);
-    for (int i = 0; i < floats.count; i++) printf("%f ", floats[i]);
-
-    printf("\n\n");
-    // print(__FUNCTION__, floats);
-}
-
-void set_half(array<int>& arr) {
-    for (auto& i : arr(0, 10)) i = -1;
-}
-
-void procedure() {
+void test_procedure() {
     STACK_FRAME
 
-    auto ints = array_fill(int, 50, 7);
-    auto arr  = get_array(10);
+    auto integers = make_incremental_array(1e3);
+    int  sum      = 0;
+    for (auto i : integers) sum += i;
 
-    set_half(ints);
-    // for(int i=0; i<ints(2,4).count; i++)
-    //    ints[i] = -10;
-
-    procedure1();
-
-    print(__FUNCTION__, ints);
-    print("arr", arr);
+    printf("sum of first %d integers is: %d\n", integers.count, sum);
 }
 
 int main() {
-    INIT_STACK_ALLOCATOR(1000);
+    int bytes = 1e7;
+    INIT_STACK_ALLOCATOR(bytes);
 
-    // prova();
-    procedure();
+    test_procedure();
 
     DESTROY_STACK_ALLOCATOR();
 }

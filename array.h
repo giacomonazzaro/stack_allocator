@@ -16,23 +16,21 @@ struct array {
     inline void        push_back(const Type& val) { data[count++] = val; }
     inline void        add(const Type& val) { data[count++] = val; }
 
+    inline void fill(const Type& val) {
+        for (int i = 0; i < count; ++i) data[i] = val;
+    }
+
     inline void insert(const Type& element, int index) {
-        assert(index <= count);
         memcpy(data + index + 1, data + index, (count - index) * sizeof(Type));
         data[index] = element;
         count += 1;
     }
 
     inline void insert(const array<Type>& arr, int index) {
-        assert(index <= count);
         memcpy(data + index + arr.count, data + index,
                (count - index - arr.count) * sizeof(Type));
         memcpy(data + index, arr.data, arr.count);
-        count += 1;
-    }
-
-    inline void fill(const Type& val) {
-        for (int i = 0; i < count; ++i) data[i] = val;
+        count += arr.count;
     }
 
     void operator=(const std::initializer_list<Type>& list) {
@@ -54,14 +52,7 @@ struct array {
         return {data + from, to - from};
     }
 
-    struct my_pair {
-        Type& data;
-        int   i;
-
-        void   operator==(const Type& rhs) { data = rhs; }
-        inline operator Type&() { return data; }
-    };
-
+    // Iterators
     struct const_iterator {
         const Type* data;
         int         i;
