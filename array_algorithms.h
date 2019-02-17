@@ -1,5 +1,5 @@
 #pragma once
-#import "memory.h"
+#include "array.h"
 
 template <typename Type>
 bool equal(const array<Type>& a, const array<Type>& b) {
@@ -21,7 +21,7 @@ bool equal(const array<Type>& a, const array<Type>& b,
 */
 
 template <typename Type>
-int find(const array<Type>& vec, const Type& val) {
+int find(const array<Type>& vec, const Type& val) {
     for (int i = 0; i < vec.count; ++i) {
         if (vec[i] == val) return i;
     }
@@ -29,7 +29,7 @@ int find(const array<Type>& vec, const Type& val) {
 }
 
 template <typename Type>
-int contains(const array<Type>& vec, const Type& val) {
+int contains(const array<Type>& vec, const Type& val) {
     return find(vec, val) != -1;
 }
 
@@ -71,7 +71,7 @@ inline int max(const array<Type>& vec) {
 // @Todo!!!
 // template <typename Container>
 // void merge_sort(Container&& range);
-#import <vector>
+// #import <vector>
 
 template <typename Type>
 void quick_sort(array<Type>&& range) {

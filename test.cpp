@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "array_algorithms.h"
 #include "stack_allocator.h"
+
 // #include "he_string.h"
 // #include <vector>
 
@@ -46,8 +47,8 @@ void test_heap_array() {
     b      = {-1, -1, -1};
     print("b = {-1, -1, -1}", b);
 
-    a(4, 7) = b;
-    print("slice 4:7 = b", a);
+    /*a(4, 7) = b;
+    print("slice 4:7 = b", a);*/
 
     quick_sort(a(0, 6));
     print("sort 0:6", a);
@@ -65,8 +66,8 @@ void test_interaction() {
     reverse(stack);
     print("reverse(stack)", stack);
 
-    heap(1, heap.count - 1 - 1) = stack;
-    print("heap(1, -1) = stack", heap);
+    /*heap(1, heap.count - 1 - 1) = stack;
+    print("heap(1, -1) = stack", heap);*/
 
     auto sstack = heap(0, 3);
     print("sstack", sstack);

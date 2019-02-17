@@ -1,13 +1,14 @@
+#include "stack_allocator.h"
+
 #include <iostream>
 #include <string>
-#include "stack_allocator.h"
 
 void procedure2() {
     STACK_ALLOCATION
-    auto ints = array(int, 32);
-    for (int& i : ints) i = 2;
+    auto floats = array(int, 32);
+    for (auto [val, index] : floats) val = 2;
 
-    print(__FUNCTION__, ints);
+    print(__FUNCTION__, floats);
 }
 
 array<int> get_array(int size) {
@@ -27,21 +28,6 @@ void procedure1() {
     printf("\n\n");
     // print(__FUNCTION__, floats);
 }
-
-/*
-void printa(const array<int>& data) {
-    auto head = data(0, 1);
-    head[0]   = 144;
-    for (auto i : data) printf("%d \n", i);
-    printf("\n");
-}
-
-void prova() {
-    STACK_ALLOCATION
-
-    auto data = array_fill(int, 10, 99);
-    printa(data);
-}*/
 
 void procedure() {
     STACK_ALLOCATION

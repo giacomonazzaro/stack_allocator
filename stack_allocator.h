@@ -1,6 +1,6 @@
 #pragma once
 
-#include "memory.h"
+#include "array.h"
 
 struct stack_allocator {
     unsigned char* data     = nullptr;
@@ -90,9 +90,9 @@ stack_allocator* global_stack_allocator = nullptr;
     auto& _stack = *global_stack_allocator;
 
 // Used to return data from stack frames
-#define STACK_ALLOCATION_INLINE auto& _stack = *global_stack_allocator;
+// #define STACK_ALLOCATION_INLINE auto& _stack = *global_stack_allocator;
 
-// Single uninitialized struct
+// allocate single uninitialized struct
 #define make(T) _stack.allocate<T>()
 
 // Uninitialized array of capacity S and count S.
@@ -103,3 +103,11 @@ stack_allocator* global_stack_allocator = nullptr;
 
 // Uninitialized array of capacity S and count 0.
 #define array_fill(T, S, Val) _stack.allocate_array_fill<T>(S, Val)
+
+template <typename Type>
+array<Type> copy(const array<Type&> arr) {
+    STACK_ALLOCATION_INLINE
+    auto result = array(Type, arr.count);
+    memcpy(result.data, arr.data, arr.count);
+    return result;
+}
