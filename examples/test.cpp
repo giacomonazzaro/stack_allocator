@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "array_algorithms.h"
-#include "stack_allocator.h"
+#include "../array_algorithms.h"
+#include "../stack_allocator.h"
 
 // #include "he_string.h"
 // #include <vector>

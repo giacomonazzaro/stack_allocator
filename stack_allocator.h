@@ -13,7 +13,7 @@ struct stack_allocator {
 };
 
 inline void init_stack_allocator(stack_allocator*& stack, int size) {
-    assert(stack != nullptr);
+    assert(stack == nullptr);
     stack           = new stack_allocator();
     stack->data     = new unsigned char[size];
     stack->capacity = size;

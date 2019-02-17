@@ -1,7 +1,4 @@
-#include "stack_allocator.h"
-
-#include <iostream>
-#include <string>
+#include "../stack_allocator.h"
 
 void procedure2() {
     STACK_FRAME
