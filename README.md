@@ -1,10 +1,15 @@
 # Stack allocator
 Lightweight library for easy stack allocation
 
+## Example
+Using the macro `STACK_FRAME` is possible to automatically achieve stack allocation for temporary heap allocated arrays. With `STACK_FRAME_RETURN` it is also possible to return allocated values from scopes without copy (as long as the returned variable is called `result`).
+
 ```C++
 #include "stack_allocator.h"
 
 array<int> make_incremental_array(int size) {
+    // The variable "result" is allocated on the stack frame of the caller (to
+    // achieve "return value optimization")
     STACK_FRAME_RETURN(array(int, size));
 
     for (int i = 0; i < result.count; ++i) result[i] = i;
@@ -12,6 +17,7 @@ array<int> make_incremental_array(int size) {
 }
 
 void test_procedure() {
+    // Data is allocated on global stack. Cleanup is automatic
     STACK_FRAME
 
     auto integers = make_incremental_array(1e3);
@@ -22,8 +28,8 @@ void test_procedure() {
 }
 
 int main() {
-    int bytes = 1e7;
-    INIT_STACK_ALLOCATOR(bytes);
+    // Initialize global stack allocator
+    INIT_STACK_ALLOCATOR(1e7);
 
     test_procedure();
 
