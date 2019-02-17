@@ -1,8 +1,8 @@
 #include "../stack_allocator.h"
 
 array<int> make_incremental_array(int size) {
-    // The variable "result" is allocated on the stack frame of the caller (to
-    // achieve "return value optimization")
+    // The value of a variable called "result" is allocated on the stack frame
+    // of the caller, hence no copy is needed when returning the value.
     STACK_FRAME_RETURN(array(int, size));
 
     for (int i = 0; i < result.count; ++i) result[i] = i;
@@ -10,8 +10,9 @@ array<int> make_incremental_array(int size) {
 }
 
 void test_procedure() {
-    // Data is allocated on global stack. Cleanup is automatic
-    STACK_FRAME
+    // Data is allocated by the global stack allocator. Cleanup is automatic at
+    // the end of the scope.
+    STACK_FRAME;
 
     auto integers = make_incremental_array(1e3);
     int  sum      = 0;
@@ -21,7 +22,7 @@ void test_procedure() {
 }
 
 int main() {
-    // Initialize global stack allocator
+    // Initialize a global stack allocator
     INIT_STACK_ALLOCATOR(1e7);
 
     test_procedure();
