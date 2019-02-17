@@ -1,6 +1,6 @@
 # COMPILE = g++ -std=c++17 -O2
 COMPILE = g++ -std=c++17
-NAME = main
+NAME = test
 
 all: 
 	$(COMPILE) $(NAME).cpp -o bin/$(NAME)
