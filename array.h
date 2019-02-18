@@ -21,7 +21,11 @@ struct array {
     }
 
     inline void insert(const Type& element, int index) {
-        memcpy(data + index + 1, data + index, (count - index) * sizeof(Type));
+        // memcpy(data + index + 1, data + index, (count - index) *
+        // sizeof(Type));
+        for (int i = count; i > index; i--) {
+            data[i] = data[i - 1];
+        }
         data[index] = element;
         count += 1;
     }
@@ -85,7 +89,7 @@ struct array {
 
    private:
     // array<Type>(const array<Type>&);
-    array<Type>& operator=(const array<Type>&);
+    // array<Type>& operator=(const array<Type>&);
 };
 
 template <typename Container>
