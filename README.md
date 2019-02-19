@@ -7,11 +7,11 @@ With `STACK_FRAME_RETURN` it is also possible to return allocated values from sc
 
 ```C++
 #include "stack_allocator.h"
-
 array<int> make_incremental_array(int size) {
-    // The value of a variable called "result" is allocated on the stack frame
-    // of the caller, hence no copy is needed when returning the value.
-    STACK_FRAME_RETURN(array(int, size));
+    // If an array is initialized without calling stack_frame(), the data is
+    // allocated on the stack frame of the caller, hence no copy is needed when
+    // returning the value.
+    auto result = allocate_array<int>(size);
 
     for (int i = 0; i < result.count; ++i) result[i] = i;
     return result;
@@ -20,21 +20,29 @@ array<int> make_incremental_array(int size) {
 void test_procedure() {
     // Data is allocated by the global stack allocator. Cleanup is automatic at
     // the end of the scope.
-    STACK_FRAME;
+    stack_frame();
 
-    auto integers = make_incremental_array(1e3);
+    int  size     = 1e3;
+    auto integers = make_incremental_array(size);
+    auto ones     = allocate_array_fill(size, 1);
     int  sum      = 0;
-    for (auto i : integers) sum += i;
+    for (int i = 0; i < ones.count; ++i) {
+        integers[i] += ones[i];
+    }
 
-    printf("sum of first %d integers is: %d\n", integers.count, sum);
+    for (auto i : integers) sum += i;
+    sum -= size;
+
+    printf("sum of first %d integers is: %d\n", size, sum);
+    assert(sum == size * (size - 1) / 2);
 }
 
 int main() {
     // Initialize a global stack allocator
-    INIT_STACK_ALLOCATOR(1e7);
+    init_stack_allocator(default_allocator, 1e7);
 
     test_procedure();
 
-    DESTROY_STACK_ALLOCATOR();
+    destroy_stack_allocator(default_allocator);
 }
 ```

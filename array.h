@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include <initializer_list>
 #include <memory>
 
@@ -32,7 +33,7 @@ struct array {
 
     inline void insert(const array<Type>& arr, int index) {
         memcpy(data + index + arr.count, data + index,
-               (count - index - arr.count) * sizeof(Type));
+            (count - index - arr.count) * sizeof(Type));
         memcpy(data + index, arr.data, arr.count);
         count += arr.count;
     }
@@ -93,8 +94,8 @@ struct array {
 };
 
 template <typename Container>
-inline void print(const char* name, Container&& a, int line_size = 32,
-                  int max_elems = 300) {
+inline void print(
+    const char* name, Container&& a, int line_size = 32, int max_elems = 300) {
     int count = a.count;
     printf("%s (count: %d)\n", name, count);  // capacity(a));
     if (count)

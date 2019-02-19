@@ -6,9 +6,10 @@
 // #include <vector>
 
 void test_stack_array() {
-    STACK_FRAME
+    stack_frame();
+
     // array<int, 10> a = {0, 1, 2, 3};
-    auto a = array(int, 100);
+    auto a = allocate_array<int>(100);
     a      = {0, 1, 2, 3};
 
     print("initializer_list {0, 1, 2, 3}", a);
@@ -33,9 +34,10 @@ void test_stack_array() {
 }
 
 void test_heap_array() {
-    STACK_FRAME
+    stack_frame();
+
     // Array<int> a = {7, 9, 3, 8, 0, 2, 4, 8, 3, 9};
-    auto a = array(int, 10);
+    auto a = allocate_array<int>(10);
     a      = {7, 9, 3, 8, 0, 2, 4, 8, 3, 9};
 
     print("Init", a);
@@ -43,7 +45,7 @@ void test_heap_array() {
     // a.insert(7, 5);
     // print("Insert 7 at 5", a);
 
-    auto b = array(int, 3);
+    auto b = allocate_array<int>(3);
     b      = {-1, -1, -1};
     print("b = {-1, -1, -1}", b);
 
@@ -55,8 +57,9 @@ void test_heap_array() {
 }
 
 void test_interaction() {
-    STACK_FRAME
-    auto heap = array(int, 10);
+    stack_frame();
+
+    auto heap = allocate_array<int>(10);
     heap      = {0, -1, -2, -3, -4, -5, -6, -7, -8, -9};
 
     print("heap", heap);
@@ -76,9 +79,10 @@ void test_interaction() {
 }
 
 void test_sorting() {
-    STACK_FRAME
+    stack_frame();
+
     // Timer time;
-    auto quick = array(int, 10);
+    auto quick = allocate_array<int>(10);
     // printf("allocating %d int in %lf seconds\n", count(x), time.secs());
     for (int i = 0; i < quick.count; ++i) {
         quick[i] = rand() % quick.count;
@@ -101,7 +105,7 @@ void test_sorting() {
 }
 
 int main() {
-    INIT_STACK_ALLOCATOR(10000);
+    init_stack_allocator(default_allocator, 10000);
 
     test_sorting();
     test_heap_array();
@@ -109,5 +113,5 @@ int main() {
     test_interaction();
     // test_conversion();
 
-    DESTROY_STACK_ALLOCATOR();
+    destroy_stack_allocator(default_allocator);
 }

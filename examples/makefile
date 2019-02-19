@@ -1,4 +1,4 @@
-COMPILE = g++ -std=c++17
+COMPILE = g++ -std=c++14
 
 test: 
 	$(COMPILE) test.cpp -o bin/test
