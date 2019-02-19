@@ -18,7 +18,7 @@ array<int> make_incremental_array(int size) {
 }
 
 void test_procedure() {
-    // Data is allocated by the global stack allocator. Cleanup is automatic at
+    // Data is allocated by default_allocator. Cleanup is automatic at
     // the end of the scope.
     stack_frame();
 

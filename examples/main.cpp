@@ -11,13 +11,13 @@ array<int> make_incremental_array(int size) {
 }
 
 void test_procedure() {
-    // Data is allocated by the global stack allocator. Cleanup is automatic at
+    // Data is allocated by default_allocator. Cleanup is automatic at
     // the end of the scope.
     stack_frame();
 
     int  size     = 1e3;
-    auto integers = make_incremental_array(size);
     auto ones     = allocate_array_fill(size, 1);
+    auto integers = make_incremental_array(size);
     int  sum      = 0;
     for (int i = 0; i < ones.count; ++i) {
         integers[i] += ones[i];
