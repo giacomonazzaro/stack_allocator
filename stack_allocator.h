@@ -7,9 +7,7 @@ struct stack_allocator {
     int            capacity = 0;
     int            offset   = 0;
 
-    ~stack_allocator() {
-        assert(data == nullptr && "call destroy_stack_allocator()!");
-    }
+    ~stack_allocator() = delete;
 };
 
 stack_allocator* default_allocator = nullptr;
@@ -51,52 +49,41 @@ inline Type& allocate() {
 }
 
 template <typename Type>
-array<Type> allocate_array(stack_allocator* stack, int count, bool empty) {
+array<Type> allocate_array(int              count,
+                           stack_allocator* stack = default_allocator) {
     int  bytes  = sizeof(Type) * count;
-    auto result = array<Type>{nullptr, 0};
+    auto result = array<Type>{nullptr, count};
     result.data = (Type*)allocate(stack, bytes);
-    if (result.data and not empty) result.count = count;
     return result;
 }
 
 template <typename Type>
-inline array<Type> allocate_array(int count, bool empty = false) {
-    return allocate_array<Type>(default_allocator, count, empty);
-}
-
-template <typename Type>
-array<Type> allocate_array_fill(
-    stack_allocator* stack, int count, const Type& def) {
-    auto result = allocate_array<Type>(stack, count, false);
+array<Type> allocate_array(int count, const Type& def,
+                           stack_allocator* stack = default_allocator) {
+    auto result = allocate_array<Type>(count, stack);
     for (int i = 0; i < count; ++i) result[i] = def;
     return result;
 }
 
-template <typename Type>
-array<Type> allocate_array_fill(int count, const Type& def) {
-    auto result = allocate_array<Type>(count, false);
-    for (int i = 0; i < count; ++i) result[i] = def;
-    return result;
-}
-
-struct _stack_frame {
+struct stack_frame_cleaner {
     stack_allocator* stack = nullptr;
     int              start = 0;
 
-    _stack_frame(stack_allocator* stack) {
+    stack_frame_cleaner(stack_allocator* stack) {
         this->stack = stack;
         start       = stack->offset;
     }
 
-    ~_stack_frame() { stack->offset = start; }
+    ~stack_frame_cleaner() { stack->offset = start; }
 };
 
 // Used to temporarly allocate local data in stack frames.
-#define stack_frame() auto _frame = _stack_frame(default_allocator);
+#define stack_frame() auto _frame = stack_frame_cleaner(default_allocator);
 
 template <typename Type>
-array<Type> copy(const array<Type&> arr) {
-    auto result = allocate_array<Type>(arr.count);
+array<Type> copy(const array<Type&> arr,
+                 stack_allocator*   stack = default_allocator) {
+    auto result = allocate_array<Type>(arr.count, stack);
     memcpy(result.data, arr.data, arr.count);
     return result;
 }

@@ -16,7 +16,7 @@ void test_procedure() {
     stack_frame();
 
     int  size     = 1e3;
-    auto ones     = allocate_array_fill(size, 1);
+    auto ones     = allocate_array(size, 1);
     auto integers = make_incremental_array(size);
     int  sum      = 0;
     for (int i = 0; i < ones.count; ++i) {
