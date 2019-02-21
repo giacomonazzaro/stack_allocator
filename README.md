@@ -2,9 +2,7 @@
 Lightweight library for easy stack allocation. Big objects can be allocated on a static memory arena and achieve the same behaviour of the standard memory stack.
 
 ## Example
-Using the macro `STACK_FRAME` is possible to automatically achieve stack allocation dyanmic arrays.  
-With `STACK_FRAME_RETURN` it is also possible to return allocated values from scopes without copy (as long as the returned variable is called `result`).
-
+Data is allocated sequentially on al global memory arena. It `stack_frame()` is called, at the end of the scope all memory allocated inside that scope is freed automatically.
 ```C++
 #include "stack_allocator.h"
 array<int> make_incremental_array(int size) {
