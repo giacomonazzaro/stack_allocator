@@ -1,5 +1,4 @@
 #pragma once
-
 #include "array.h"
 
 struct stack_allocator {
@@ -7,39 +6,53 @@ struct stack_allocator {
     int            capacity = 0;
     int            offset   = 0;
 
-    ~stack_allocator() = delete;
+    ~stack_allocator() {
+        assert(data == nullptr && "call destroy_stack_allocator()!");
+    }
 };
 
-stack_allocator* default_allocator = nullptr;
+extern stack_allocator default_allocator;
 
-inline void init_stack_allocator(stack_allocator*& stack, int size) {
-    assert(stack == nullptr);
-    stack           = new stack_allocator();
-    stack->data     = new unsigned char[size];
-    stack->capacity = size;
-    stack->offset   = 0;
+inline void init_stack_allocator(stack_allocator& stack, int size) {
+    assert(stack.data == nullptr);
+    stack.data     = new unsigned char[size];
+    stack.capacity = size;
+    stack.offset   = 0;
 }
 
-inline void destroy_stack_allocator(stack_allocator* stack) {
-    assert(stack != nullptr);
-    delete[] stack->data;
-    stack->data     = nullptr;
-    stack->capacity = 0;
-    stack->offset   = 0;
+inline void init_default_stack_allocator(int size) {
+    init_stack_allocator(default_allocator, size);
 }
 
-unsigned char* allocate(stack_allocator* stack, int bytes) {
-    auto ptr = (stack->offset + bytes >= stack->capacity) ?
+inline void destroy_stack_allocator(stack_allocator& stack) {
+    assert(stack.data != nullptr);
+    delete[] stack.data;
+    stack.data     = nullptr;
+    stack.capacity = 0;
+    stack.offset   = 0;
+}
+
+inline void destroy_default_stack_allocator() {
+    destroy_stack_allocator(default_allocator);
+}
+
+inline unsigned char* allocate(stack_allocator& stack, int bytes) {
+    assert(stack.data != nullptr);
+    auto ptr = (stack.offset + bytes >= stack.capacity) ?
                    nullptr :
-                   stack->data + stack->offset;
+                   stack.data + stack.offset;
 
     assert(ptr != nullptr);  // Resize stack? Not for now.
-    stack->offset += bytes;
+    stack.offset += bytes;
     return ptr;
 }
 
+inline unsigned char* allocate(int bytes) {
+    return allocate(default_allocator, bytes);
+}
+
 template <typename Type>
-Type& allocate(stack_allocator* stack) {
+inline Type& allocate(stack_allocator& stack) {
     return *((Type*)allocate(stack, sizeof(Type)));
 }
 
@@ -49,8 +62,7 @@ inline Type& allocate() {
 }
 
 template <typename Type>
-array<Type> allocate_array(int              count,
-                           stack_allocator* stack = default_allocator) {
+inline array<Type> allocate_array(stack_allocator& stack, int count) {
     int  bytes  = sizeof(Type) * count;
     auto result = array<Type>{nullptr, count};
     result.data = (Type*)allocate(stack, bytes);
@@ -58,32 +70,119 @@ array<Type> allocate_array(int              count,
 }
 
 template <typename Type>
-array<Type> allocate_array(int count, const Type& def,
-                           stack_allocator* stack = default_allocator) {
-    auto result = allocate_array<Type>(count, stack);
+inline array<Type> allocate_array(int count) {
+    return allocate_array<Type>(default_allocator, count);
+}
+
+template <typename Type>
+inline array<Type> allocate_array(stack_allocator& stack, int count,
+                                  const Type& def) {
+    auto result = allocate_array<Type>(stack, count);
     for (int i = 0; i < count; ++i) result[i] = def;
     return result;
 }
 
-struct stack_frame_cleaner {
+template <typename Type>
+inline array<Type> allocate_array(int count, const Type& def) {
+    return allocate_array(default_allocator, count, def);
+}
+
+template <typename Type>
+inline array<array<Type>> allocate_arrays(stack_allocator&  stack,
+                                          const array<int>& counts) {
+    auto result  = allocate_array<array<Type>>(stack, counts.count);
+    result.count = counts.count;  // @Cleanup
+    for (int i = 0; i < counts.count; ++i) {
+        result[i] = allocate_array<Type>(stack, counts[i]);
+    }
+    return result;
+}
+
+template <typename Type>
+inline array<array<Type>> allocate_arrays(const array<int>& counts) {
+    return allocate_arrays<Type>(default_allocator, counts);
+}
+
+template <typename Type>
+inline array<array<Type>> allocate_arrays(stack_allocator&   stack,
+                                          const array<int>&  counts,
+                                          const array<Type>& def) {
+    auto result = allocate_arrays<Type>(stack, counts);
+    for (int i = 0; i < result.count; ++i) {
+        copy_to(def, result[i]);
+    }
+    return result;
+}
+
+template <typename Type>
+inline array<array<Type>> allocate_arrays(stack_allocator& stack, int count,
+                                          const array<Type>& def) {
+    auto result = allocate_array<array<Type>>(stack, count);
+    for (int i = 0; i < result.count; ++i) {
+        result[i] = allocate_array<Type>(def.count);
+        copy_to(def, result[i]);
+    }
+    return result;
+}
+
+template <typename Type>
+inline array<array<Type>> allocate_arrays(int count, const array<Type>& def) {
+    return allocate_arrays(default_allocator, count, def);
+}
+
+/* DEPRECATE THIS */
+template <typename Type>
+inline array<array<Type>> allocate_arrays(const array<int>&  counts,
+                                          const array<Type>& def) {
+    auto result = allocate_arrays<Type>(default_allocator, counts);
+    for (int i = 0; i < result.count; ++i) {
+        copy_to(def, result[i]);
+    }
+    return allocate_arrays<Type>(default_allocator, counts, def);
+}
+
+template <typename Type>
+inline array<Type> allocate_array(stack_allocator&                   stack,
+                                  const std::initializer_list<Type>& list) {
+    auto result = allocate_array<Type>(stack, (int)list.size());
+    int  i      = 0;
+    for (auto& v : list) result[i++] = v;
+    return result;
+}
+
+template <typename Type>
+inline array<Type> allocate_array(const std::initializer_list<Type>& list) {
+    return allocate_array(default_allocator, list);
+}
+
+struct _stack_frame {
     stack_allocator* stack = nullptr;
     int              start = 0;
 
-    stack_frame_cleaner(stack_allocator* stack) {
+    _stack_frame(stack_allocator* stack) {
         this->stack = stack;
         start       = stack->offset;
     }
 
-    ~stack_frame_cleaner() { stack->offset = start; }
+    ~_stack_frame() { stack->offset = start; }
 };
 
 // Used to temporarly allocate local data in stack frames.
-#define stack_frame() auto _frame = stack_frame_cleaner(default_allocator);
+#define stack_frame() auto _frame = _stack_frame(&default_allocator);
 
 template <typename Type>
-array<Type> copy(const array<Type&> arr,
-                 stack_allocator*   stack = default_allocator) {
-    auto result = allocate_array<Type>(arr.count, stack);
-    memcpy(result.data, arr.data, arr.count);
+inline array<Type> copy(stack_allocator& stack, const array<Type>& arr) {
+    auto result = allocate_array<Type>(stack, arr.count);
+    copy_to(arr, result);
     return result;
 }
+
+template <typename Type>
+inline array<array<Type>> copy(stack_allocator&          stack,
+                               const array<array<Type>>& arr) {
+    auto result = allocate_array<array<Type>>(stack, arr.count);
+    for (int i = 0; i < result.count; i++) result[i] = copy(stack, arr[i]);
+    return result;
+}
+
+#define copy(a) copy(default_allocator, a);

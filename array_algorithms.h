@@ -27,7 +27,7 @@ int find(const array<Type>& vec, const Type& val) {
 }
 
 template <typename Type>
-int contains(const array<Type>& vec, const Type& val) {
+bool contains(const array<Type>& vec, const Type& val) {
     return find(vec, val) != -1;
 }
 

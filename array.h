@@ -1,7 +1,6 @@
 #pragma once
 #include <cassert>
 #include <initializer_list>
-#include <memory>
 
 template <typename Type>
 struct array {
@@ -13,7 +12,7 @@ struct array {
     inline Type&       operator[](int i) { return data[i]; }
     inline const Type& back() const { return data[count - 1]; }
     inline Type&       back() { return data[count - 1]; }
-    inline int         size() { return count; }
+    inline int         size() const { return count; }
     inline void        push_back(const Type& val) { data[count++] = val; }
     inline void        add(const Type& val) { data[count++] = val; }
 
@@ -22,8 +21,6 @@ struct array {
     }
 
     inline void insert(const Type& element, int index) {
-        // memcpy(data + index + 1, data + index, (count - index) *
-        // sizeof(Type));
         for (int i = count; i > index; i--) {
             data[i] = data[i - 1];
         }
@@ -32,25 +29,38 @@ struct array {
     }
 
     inline void insert(const array<Type>& arr, int index) {
-        memcpy(data + index + arr.count, data + index,
-            (count - index - arr.count) * sizeof(Type));
-        memcpy(data + index, arr.data, arr.count);
+        for (int i = count; i > index; i--) {
+            data[i] = data[i - arr.count];
+        }
+        for (int i = 0; i < arr.count; ++i) {
+            data[index + i] = arr[i];
+        }
         count += arr.count;
+    }
+
+    inline void append(const array<Type>& arr) { insert(arr, count); }
+
+    inline void remove(int index) {
+        for (int i = index; i < count - 1; ++i) {
+            data[i] = data[i + 1];
+        }
+        count -= 1;
     }
 
     void operator=(const std::initializer_list<Type>& list) {
         count = (int)list.size();
-        memcpy(data, list.begin(), list.size() * sizeof(Type));
+        int i = 0;
+        for (auto& v : list) data[i++] = v;
     }
 
-    array<Type> operator()(int from, int to) {
+    array<Type> slice(int from, int to) {
         assert(from >= 0 and from <= count);
         assert(to >= 0 and to <= count);
         assert(from <= to);
         return {data + from, to - from};
     }
 
-    const array<const Type> operator()(int from, int to) const {
+    const array<const Type> slice(int from, int to) const {
         assert(from >= 0 and from <= count);
         assert(to >= 0 and to <= count);
         assert(from <= to);
@@ -87,36 +97,58 @@ struct array {
     };
     inline nonconst_iterator begin() { return nonconst_iterator{data, 0}; }
     inline nonconst_iterator end() { return nonconst_iterator{data, count}; }
-
-   private:
-    // array<Type>(const array<Type>&);
-    // array<Type>& operator=(const array<Type>&);
 };
 
-template <typename Container>
-inline void print(
-    const char* name, Container&& a, int line_size = 32, int max_elems = 300) {
-    int count = a.count;
-    printf("%s (count: %d)\n", name, count);  // capacity(a));
-    if (count)
-        printf(" ");
-    else {
-        printf("\n");
-        return;
-    }
-    for (int i = 0; i < count; ++i) {
-        printf("%d", a[i]);
-        if (i == count - 1)
-            printf("\n\n");
-
-        else if (i % line_size == line_size - 1)
-            printf("\n ");
-        else
-            printf(", ");
-
-        if (i > max_elems) {
-            printf("...\n\n");
-            return;
-        }
-    }
+template <typename Type>
+inline void copy_to(const array<Type>& from, array<Type>& to) {
+    assert(from.count <= to.count);
+    for (int i = 0; i < from.count; ++i) to[i] = from[i];
+    to.count = from.count;
 }
+
+template <typename Type>
+inline void copy_to(const array<array<Type>>& from, array<array<Type>>& to) {
+    assert(from.count <= to.count);
+    for (int i = 0; i < from.count; ++i) copy_to(from[i], to[i]);
+    to.count = from.count;
+}
+
+template <typename Type>
+inline int find(const array<Type>& vec, const Type& val) {
+    for (int i = 0; i < vec.count; ++i)
+        if (vec[i] == val) return i;
+    return -1;
+}
+
+template <typename Type>
+inline bool contains(const array<Type>& vec, const Type& val) {
+    return find(vec, val) != -1;
+}
+
+// template <typename Container>
+// inline void print(const char* name, Container&& a, int line_size = 32,
+//                   int max_elems = 300) {
+//     int count = a.count;
+//     printf("%s (count: %d)\n", name, count);  // capacity(a));
+//     if (count)
+//         printf(" ");
+//     else {
+//         printf("\n");
+//         return;
+//     }
+//     for (int i = 0; i < count; ++i) {
+//         printf("%d", a[i]);
+//         if (i == count - 1)
+//             printf("\n\n");
+
+//         else if (i % line_size == line_size - 1)
+//             printf("\n ");
+//         else
+//             printf(", ");
+
+//         if (i > max_elems) {
+//             printf("...\n\n");
+//             return;
+//         }
+//     }
+// }
